@@ -13,11 +13,14 @@ make your own booper. No assets or notecards required, just the script.
   Muzzle, Lips, and Neck
 - Pronoun support for the wearer (He/Him, She/Her, They/Them); toucher text
   stays gender-neutral
+- Custom nickname via Settings, used in the chat lines, consent dialogs, and
+  the counter (blank falls back to your display name)
 - Text tags you can build phrases from: [toucher], [owner], [sub], [obj],
   [pos], [s]
 - Consent system: the owner approves each visitor action, with a 30 second
   timeout, one request at a time, and a trusted list that skips the check
-- Boop counter with hover text, saved across re-rezzes
+- Boop counter with hover text ("<name> has been booped N times!"), saved
+  across re-rezzes
 - A short cooldown so one visitor cannot spam actions
 - Optional sounds: put a sound in the object's contents named the same as a
   button (capitalization does not matter) and it plays with that action
@@ -40,15 +43,15 @@ make your own booper. No assets or notecards required, just the script.
 5. Touch the booper. Visitors pick a target area, then an action. Owners get
    a SETTINGS button on the same menu.
 
-The owner settings menu: Lock, Pronouns, Consent, Sounds, Particles, Manual
-Blush, Help, Reset, and Trusted (shown while consent checks are on). The Help
-button hands over the first notecard it finds in the contents, so any
+The owner settings menu: Lock, Pronouns, Name, Consent, Sounds, Particles,
+Manual Blush, Help, Reset, and Trusted (shown while consent checks are on).
+The Help button hands over the first notecard it finds in the contents, so any
 notecard name works.
 
 ## Limits worth knowing
 
-- One Mono script, 64 KB budget. The current feature set fits with a few KB of
-  headroom, so test in-world before piling on new features.
+- One Mono script, 64 KB budget. The current feature set fits with a couple
+  of KB of headroom, so test in-world before piling on new features.
 - One action category is open at a time, shared between visitors. Two people
   clicking at the same moment can end up in the same category menu.
 - The script ships with no sounds or textures. Bring your own.

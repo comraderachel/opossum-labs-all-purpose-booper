@@ -2,15 +2,18 @@
 ||  ========================================================================
 ||  OPOSSUM LABS ALL PURPOSE BOOPER
 ||  ========================================================================
-||  Version: 3 (lean rebuild, 2026-11-03)
+||  Version: 3.1 (custom nickname, 2026-11-03)
 ||
 ||  Features:
 ||    - Anatomy Categories: Forehead, Nose, Ears, Cheeks, Muzzle, Lips, Neck
 ||    - First-run setup: pronouns + consent style (re-run any time via Reset)
 ||    - Pronoun substitution ([toucher], [owner], [sub], [obj], [pos], [s])
+||    - Custom nickname via Settings > Name, used in action text, consent
+||      dialogs, and the counter (blank = your display name)
 ||    - Global consent system: owner approves each visitor action, 30 second
 ||      timeout, one request at a time, trusted list skips the check
-||    - Boop counter with hover text, saved in linkset data
+||    - Boop counter with hover text ("<nickname> has been booped N times!"),
+||      saved in linkset data
 ||    - Cooldown on the last visitor to stop spamming
 ||    - Owner Settings: Lock, Pronouns, Consent, Sounds, Particles,
 ||      Manual Blush, Help notecard, Reset
@@ -106,6 +109,8 @@ integer gSoundsOn = TRUE;
 integer gParticlesOn = TRUE;
 integer gCount = 0;
 integer gHoverUntil = 0;
+string  gCustomName = "";    // owner's nickname ("" = use display name)
+integer gNameListen = -1;   // one-shot textbox listener
 
 // ########## NAMES & TEXT INTERPOLATION ##########
 string nameOf(key id) {
@@ -115,9 +120,16 @@ string nameOf(key id) {
     return n;
 }
 
+// The owner's name: chosen nickname if set, else display name.
+// Toucher names always stay real display names.
+string ownerName() {
+    if (gCustomName != "") return gCustomName;
+    return nameOf(llGetOwner());
+}
+
 string phrase(string s, key id) {
     s = llReplaceSubString(s, "[toucher]", nameOf(id), 0);
-    s = llReplaceSubString(s, "[owner]", nameOf(llGetOwner()), 0);
+    s = llReplaceSubString(s, "[owner]", ownerName(), 0);
     s = llReplaceSubString(s, "[sub]", pSub, 0);
     s = llReplaceSubString(s, "[obj]", pObj, 0);
     s = llReplaceSubString(s, "[pos]", pPos, 0);
@@ -170,6 +182,7 @@ savePrefs() {
     llLinksetDataWrite(PREF_PREFIX + "sounds", (string)gSoundsOn);
     llLinksetDataWrite(PREF_PREFIX + "parts", (string)gParticlesOn);
     llLinksetDataWrite(PREF_PREFIX + "count", (string)gCount);
+    llLinksetDataWrite(PREF_PREFIX + "cname", gCustomName);
 }
 
 integer loadPrefs() {
@@ -182,6 +195,7 @@ integer loadPrefs() {
     gSoundsOn = (llLinksetDataRead(PREF_PREFIX + "sounds") != "0");
     gParticlesOn = (llLinksetDataRead(PREF_PREFIX + "parts") != "0");
     gCount = (integer)llLinksetDataRead(PREF_PREFIX + "count");
+    gCustomName = llLinksetDataRead(PREF_PREFIX + "cname"); // "" reads as unset
     return TRUE;
 }
 
@@ -193,6 +207,7 @@ clearPrefs() {
     llLinksetDataDelete(PREF_PREFIX + "sounds");
     llLinksetDataDelete(PREF_PREFIX + "parts");
     llLinksetDataDelete(PREF_PREFIX + "count");
+    llLinksetDataDelete(PREF_PREFIX + "cname");
     llLinksetDataDelete(PREF_PREFIX + "trusted");
     // Hover text is a prim property that outlives a script reset, so it must
     // be cleared here or a stale counter floats after a factory Reset.
@@ -204,6 +219,31 @@ clearPrefs() {
 startListen(key who) {
     llListenRemove(gListen);
     gListen = llListen(comChannel, "", who, "");
+}
+
+// ########## CUSTOM NICKNAME (OWNER ONLY) ##########
+// One-shot textbox on comChannel - 1, so free-text replies can never be
+// mistaken for button presses. Cancelling the box sends nothing; the
+// leftover listener is removed on the next open or reply.
+openNameBox() {
+    llListenRemove(gNameListen);
+    gNameListen = llListen(comChannel - 1, "", llGetOwner(), "");
+    llTextBox(llGetOwner(), "Type a nickname (blank = your display name):", comChannel - 1);
+}
+
+handleNameReply(string message) {
+    llListenRemove(gNameListen);
+    gNameListen = -1;
+    string n = llStringTrim(message, STRING_TRIM);
+    if (n == "") {
+        gCustomName = "";
+        llLinksetDataWrite(PREF_PREFIX + "cname", "");
+        llOwnerSay("Nickname cleared - using your display name.");
+        return;
+    }
+    gCustomName = llGetSubString(n, 0, 29); // cap at 30: display names max at 31
+    llLinksetDataWrite(PREF_PREFIX + "cname", gCustomName);
+    llOwnerSay("Nickname set: " + gCustomName);
 }
 
 // ########## TIMER ##########
@@ -237,7 +277,7 @@ clearPending() {
 showCounter() {
     string plural = "s";
     if (gCount == 1) plural = "";
-    llSetText("Booped " + (string)gCount + " time" + plural + "!", <1.0, 1.0, 1.0>, 1.0);
+    llSetText(ownerName() + " has been booped " + (string)gCount + " time" + plural + "!", <1.0, 1.0, 1.0>, 1.0);
     gHoverUntil = llGetUnixTime() + HOVER_TIME;
     armTimer();
 }
@@ -322,7 +362,7 @@ requestConsent(key toucher, string actionName, string text) {
     gPendingAction = actionName;
     gPendingUntil = llGetUnixTime() + CONSENT_TIMEOUT;
     armTimer();
-    llRegionSayTo(toucher, 0, "Getting permission to " + llToLower(actionName) + " " + nameOf(llGetOwner()) + "...");
+    llRegionSayTo(toucher, 0, "Getting permission to " + llToLower(actionName) + " " + ownerName() + "...");
     llDialog(llGetOwner(), nameOf(toucher) + " wants to " + llToLower(actionName) + " you. Allow?", ["YES_ALLOW", "TRUST_ALLOW", "NO_DENY"], comChannel);
 }
 
@@ -355,7 +395,7 @@ showSettingsMenu() {
     if (!gSoundsOn) sStatus = "Sounds: Off";
     string pStatus = "Particles: On";
     if (!gParticlesOn) pStatus = "Particles: Off";
-    list b = ["Lock", "Pronouns", cStatus, sStatus, pStatus, "Manual Blush", "Help", "Reset", "BACK"];
+    list b = ["Lock", "Pronouns", "Name", cStatus, sStatus, pStatus, "Manual Blush", "Help", "Reset", "BACK"];
     if (consentRequired) b += ["Trusted"]; // only meaningful while consent checks run
     llDialog(llGetOwner(), "Settings:", b, comChannel);
 }
@@ -487,11 +527,14 @@ state Operational {
     listen(integer channel, string name, key id, string message) {
         key owner = llGetOwner();
 
+        // --- Nickname textbox replies: OWNER ONLY (one-shot on comChannel - 1) ---
+        if (channel == comChannel - 1) { handleNameReply(message); return; }
+
         // --- Consent replies: OWNER ONLY ---
         if (message == "YES_ALLOW" || message == "TRUST_ALLOW" || message == "NO_DENY") {
             if (id != owner || gPendingToucher == NULL_KEY) return;
             if (message == "NO_DENY") {
-                llRegionSayTo(gPendingToucher, 0, nameOf(owner) + " said no to that one.");
+                llRegionSayTo(gPendingToucher, 0, ownerName() + " said no to that one.");
                 clearPending();
                 return;
             }
@@ -507,6 +550,7 @@ state Operational {
         // --- Settings: OWNER ONLY ---
         if (id == owner) {
             if (message == "SETTINGS")     { showSettingsMenu(); return; }
+            if (message == "Name")         { openNameBox(); return; }
             if (message == "Help")         { giveHelp(); return; }
             if (message == "Trusted")     { if (consentRequired) showTrustedMenu(); return; }
             if (message == "Clear Trusted") {
@@ -554,7 +598,7 @@ state Operational {
         llSetTimerEvent(0);
         blushAndHoverTick();
         if (gPendingToucher != NULL_KEY && llGetUnixTime() >= gPendingUntil) {
-            llRegionSayTo(gPendingToucher, 0, "No answer from " + nameOf(llGetOwner()) + " - try again later.");
+            llRegionSayTo(gPendingToucher, 0, "No answer from " + ownerName() + " - try again later.");
             clearPending();
         }
         armTimer();
