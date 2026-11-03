@@ -37,8 +37,8 @@ make your own booper. No assets or notecards required, just the script.
 2. Open the object's contents and make a New Script.
 3. Delete the default text, paste in `all-purpose-booper.lsl`, and Save.
    Ensure that the Mono checkbox is checked.
-4. Wear the object on your head (an attachment, a hat, a hairpin, whatever
-   works).
+4. Wear the object as an attachment at the nose or wherever you want it,
+   and move it into place with the edit menu.
 5. First run walks the owner through pronouns and whether to approve each
    interaction before it happens.
 6. Touch the booper. Visitors pick a target area, then an action. Owners get
