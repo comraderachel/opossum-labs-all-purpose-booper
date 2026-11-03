@@ -2,7 +2,7 @@
 ||  ========================================================================
 ||  OPOSSUM LABS ALL PURPOSE BOOPER
 ||  ========================================================================
-||  Version: 3.1 (custom nickname, 2026-11-03)
+||  Version: 3.2 (range notice, 2026-11-03)
 ||
 ||  Features:
 ||    - Anatomy Categories: Forehead, Nose, Ears, Cheeks, Muzzle, Lips, Neck
@@ -31,7 +31,7 @@
 
 // ########## CONSTANTS ##########
 integer BLUSH_CHANNEL    = 88;     // relay channel for the blush mesh command
-float   TOUCH_RANGE      = 10.0;   // max distance a non-owner touch is accepted from
+float   TOUCH_RANGE      = 15.0;   // max distance a non-owner touch is accepted from
 integer CONSENT_TIMEOUT  = 30;     // seconds an unanswered consent request lives
 integer TOUCH_COOLDOWN   = 8;      // seconds one visitor must wait between actions
 integer HOVER_TIME       = 10;     // seconds the boop counter floats after each action
@@ -520,6 +520,8 @@ state Operational {
             key k = llDetectedKey(i);
             if (k == owner || llVecDist(llDetectedPos(i), llGetPos()) <= TOUCH_RANGE) {
                 showCategoryMenu(k);
+            } else {
+                llRegionSayTo(k, 0, "Too far away - come closer to boop!");
             }
         }
     }
