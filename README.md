@@ -31,16 +31,17 @@ make your own booper. No assets or notecards required, just the script.
 
 ## Make your own booper
 
-1. Open your object's contents and make a New Script.
-2. Delete the default text, paste in `all-purpose-booper.lsl`, and Save.
-   A brand new script compiles as Mono, which this needs. If you paste into a
-   very old script slot and get a Stack-Heap Collision, make a fresh New
-   Script instead of reusing the old one.
-3. Wear the object on your head (an attachment, a hat, a hairpin, whatever
+1. Pick a home for the script: drop it into an existing object such as your
+   head or nose attachment, or make a small transparent sphere and position
+   it in the nose area.
+2. Open the object's contents and make a New Script.
+3. Delete the default text, paste in `all-purpose-booper.lsl`, and Save.
+   Ensure that the Mono checkbox is checked.
+4. Wear the object on your head (an attachment, a hat, a hairpin, whatever
    works).
-4. First run walks the owner through pronouns and whether to approve each
+5. First run walks the owner through pronouns and whether to approve each
    interaction before it happens.
-5. Touch the booper. Visitors pick a target area, then an action. Owners get
+6. Touch the booper. Visitors pick a target area, then an action. Owners get
    a SETTINGS button on the same menu.
 
 The owner settings menu: Lock, Pronouns, Name, Consent, Sounds, Particles,
@@ -64,4 +65,4 @@ FITNESS FOR A PARTICULAR PURPOSE. See the LICENSE file for details. Keep the
 code open if you share or modify it.
 
 A pre-assembled booper, with a full help notecard, is sold at the Opossum Labs
-store in Second Life. Support: rachel.possum (in-world).
+store in Second Life.
